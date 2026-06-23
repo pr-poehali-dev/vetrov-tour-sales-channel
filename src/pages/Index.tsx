@@ -220,7 +220,15 @@ export default function Index() {
                       <span className="text-xs text-muted-foreground">от</span>
                       <div className="font-display font-bold text-2xl">{t.price} ₽</div>
                     </div>
-                    <Button className="rounded-full bg-secondary hover:bg-secondary/90">Подробнее</Button>
+                    <Button
+                      className="rounded-full bg-secondary hover:bg-secondary/90"
+                      onClick={() => {
+                        setForm((f) => ({ ...f, destination: t.title }));
+                        scrollTo('contacts');
+                      }}
+                    >
+                      Забронировать
+                    </Button>
                   </div>
                 </div>
               </article>
