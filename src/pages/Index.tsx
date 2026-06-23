@@ -8,6 +8,9 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import Icon from '@/components/ui/icon';
+import { useToast } from '@/hooks/use-toast';
+
+const LEAD_URL = 'https://functions.poehali.dev/df9ca0cf-5996-4085-b38f-23b8ebcbbc1e';
 
 const ALTAI = 'https://cdn.poehali.dev/projects/4b746671-1144-4abe-8cff-8534c097b550/files/c1c09e28-b810-4732-95a8-5d215e8bfc6a.jpg';
 const KAMCHATKA = 'https://cdn.poehali.dev/projects/4b746671-1144-4abe-8cff-8534c097b550/files/5c1d1673-561b-433b-8360-4dc6da55620a.jpg';
@@ -36,8 +39,33 @@ const FAQ = [
 
 export default function Index() {
   const [activeRegion, setActiveRegion] = useState('Все');
+  const { toast } = useToast();
+  const [form, setForm] = useState({ name: '', contact: '', destination: '' });
+  const [sending, setSending] = useState(false);
 
   const filtered = activeRegion === 'Все' ? TOURS : TOURS.filter((t) => t.region === activeRegion);
+
+  const submitLead = async () => {
+    if (!form.name.trim() || !form.contact.trim()) {
+      toast({ title: 'Заполните имя и контакт', variant: 'destructive' });
+      return;
+    }
+    setSending(true);
+    try {
+      const res = await fetch(LEAD_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) throw new Error();
+      toast({ title: 'Заявка отправлена!', description: 'Мы свяжемся с вами в течение часа.' });
+      setForm({ name: '', contact: '', destination: '' });
+    } catch {
+      toast({ title: 'Не удалось отправить', description: 'Попробуйте позже или позвоните нам.', variant: 'destructive' });
+    } finally {
+      setSending(false);
+    }
+  };
 
   const nav = [
     ['Туры', 'tours'],
@@ -324,27 +352,46 @@ export default function Index() {
             </p>
             <div className="space-y-4">
               {[
-                ['Phone', '+7 (800) 555-04-14'],
-                ['Mail', 'hello@vetrov.ru'],
-                ['Send', 'Telegram: @vetrov_tours'],
-              ].map(([icon, text]) => (
-                <div key={text} className="flex items-center gap-3">
+                ['Phone', '+7 (981) 827-13-53', 'tel:+79818271353'],
+                ['Mail', 'hello@vetrov.ru', 'mailto:hello@vetrov.ru'],
+                ['Send', 'Telegram: @vetrov_tours', 'https://t.me/vetrov_tours'],
+              ].map(([icon, text, href]) => (
+                <a key={text} href={href} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                   <div className="w-11 h-11 rounded-full bg-secondary/20 flex items-center justify-center">
                     <Icon name={icon} size={20} className="text-secondary" />
                   </div>
                   <span className="text-lg">{text}</span>
-                </div>
+                </a>
               ))}
             </div>
           </div>
           <div className="glass rounded-3xl p-8 text-primary shadow-2xl">
             <h3 className="font-display font-bold text-xl mb-5">Оставить заявку</h3>
             <div className="space-y-4">
-              <Input placeholder="Ваше имя" className="h-12 rounded-xl bg-white" />
-              <Input placeholder="Телефон или Telegram" className="h-12 rounded-xl bg-white" />
-              <Input placeholder="Куда хотите поехать?" className="h-12 rounded-xl bg-white" />
-              <Button className="w-full h-12 rounded-xl bg-secondary hover:bg-secondary/90 text-base">
-                Отправить заявку
+              <Input
+                placeholder="Ваше имя"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                className="h-12 rounded-xl bg-white"
+              />
+              <Input
+                placeholder="Телефон или Telegram"
+                value={form.contact}
+                onChange={(e) => setForm({ ...form, contact: e.target.value })}
+                className="h-12 rounded-xl bg-white"
+              />
+              <Input
+                placeholder="Куда хотите поехать?"
+                value={form.destination}
+                onChange={(e) => setForm({ ...form, destination: e.target.value })}
+                className="h-12 rounded-xl bg-white"
+              />
+              <Button
+                onClick={submitLead}
+                disabled={sending}
+                className="w-full h-12 rounded-xl bg-secondary hover:bg-secondary/90 text-base"
+              >
+                {sending ? 'Отправляем...' : 'Отправить заявку'}
                 <Icon name="Send" size={18} className="ml-1" />
               </Button>
             </div>
